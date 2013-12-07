@@ -1,11 +1,19 @@
 package atl.pressurewave;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
+import static org.lwjgl.opengl.GL11.GL_POINTS;
 import static org.lwjgl.opengl.GL11.GL_PROJECTION;
+import static org.lwjgl.opengl.GL11.glBegin;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glColor3f;
+import static org.lwjgl.opengl.GL11.glEnd;
+import static org.lwjgl.opengl.GL11.glLoadIdentity;
+import static org.lwjgl.opengl.GL11.glMatrixMode;
+import static org.lwjgl.opengl.GL11.glOrtho;
+import static org.lwjgl.opengl.GL11.glVertex2f;
 
 import org.lwjgl.LWJGLException;
-import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
@@ -32,11 +40,12 @@ public class PressureTest1 {
 
 	private final String TITLE = "Pressure Waves!";
 
-	private long lastFrame; // used if using delta to adjust speeed
+	// private long lastFrame; // used if using delta to adjust speeed
 
-	private long getTime() {
-		return (Sys.getTime() * 1000) / Sys.getTimerResolution();
-	}
+	/*
+	 * private long getTime() { return (Sys.getTime() * 1000) /
+	 * Sys.getTimerResolution(); }
+	 */
 
 	/**
 	 * Delta is a value used to track the framerate and adjust speed of
@@ -73,27 +82,25 @@ public class PressureTest1 {
 		glMatrixMode(GL_MODELVIEW);
 	}
 
-	private void setUpTimer() {
-		lastFrame = getTime();
-	}
+	/*
+	 * private void setUpTimer() { lastFrame = getTime(); }
+	 */
 
 	private int[][] setUpGrid(int w, int h) {
 		int[][] g = new int[w][h];
 		for (int i = 0; i < w; i++) {
 			for (int j = 0; j < h; j++) {
-				//g[i][j] = (int) (((w - i) * 1.0 / w) * PURE_COLOR_PRESSURE_THRESHOLD);
+				// g[i][j] = (int) (((w - i) * 1.0 / w) *
+				// PURE_COLOR_PRESSURE_THRESHOLD);
 				// a gradient of pressures, high -> low
-				
+
 				g[i][j] = 0;
-				
-				
-				/*if(j < 20){
-					g[i][j] = PURE_COLOR_PRESSURE_THRESHOLD;
-				}
-				if(j > 460){
-					g[i][j] = -PURE_COLOR_PRESSURE_THRESHOLD;
-				}*/
-				//strips of low at top and high at bottom
+
+				/*
+				 * if(j < 20){ g[i][j] = PURE_COLOR_PRESSURE_THRESHOLD; } if(j >
+				 * 460){ g[i][j] = -PURE_COLOR_PRESSURE_THRESHOLD; }
+				 */
+				// strips of low at top and high at bottom
 			}
 		}
 		return g;
@@ -115,7 +122,7 @@ public class PressureTest1 {
 		setUpDisplay();
 		setUpOpenGL();
 
-		setUpTimer();
+		// setUpTimer();
 
 		grid = setUpGrid(SCREEN_WIDTH, SCREEN_HEIGHT);
 		wall = setUpWall(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -176,8 +183,8 @@ public class PressureTest1 {
 		return true;
 	}
 
-	private boolean balanceWithNeighbors(int x, int y, int[][] gc) {	
-		//Does not work as intended.
+	private boolean balanceWithNeighbors(int x, int y, int[][] gc) {
+		// Does not work as intended.
 		boolean balanced = false;
 		if (balanceWithCell(x, y, x - 1, y, gc))
 			balanced = true;
@@ -191,12 +198,12 @@ public class PressureTest1 {
 	}
 
 	private boolean balanceWithCell(int x1, int y1, int x2, int y2, int[][] gc) {
-		//Does not work as intended.
+		// Does not work as intended.
 		if (isAcceptableBalanceTarget(x1, y1, x2, y2)) {
 			int valueDiff = grid[x1][y1] - grid[x2][y2];
 			double root = Math.sqrt(valueDiff);
-			setValue(x1, y1, gc[x1][y1] - (int)root, gc);
-			setValue(x2, y2, gc[x2][y2] + (int)root, gc);
+			setValue(x1, y1, gc[x1][y1] - (int) root, gc);
+			setValue(x2, y2, gc[x2][y2] + (int) root, gc);
 			return true;
 		}
 		return false;
