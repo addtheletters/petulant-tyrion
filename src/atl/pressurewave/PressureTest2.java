@@ -13,20 +13,23 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
+
 public class PressureTest2 {
 
-	double[][] grid;
+	myVector[][] grid; 
 	boolean[][] wall;
 
 	final double PURE_COLOR_PRESSURE_THRESHOLD = 100;
 	final float[] WALL_COLOR = { 1, 0.5f, 0 };
-	final int MOUSE_POWER = 1000;
-
-	final double DIVISIVE_FACTOR = 20;
+	final int MOUSE_POWER = 10000;
+	
+	final double DIVISIVE_FACTOR = 1.2;
 	// when the pressure is +PCPT, color will be pure white.
 	// when pressure is -PCPT, color will be pure black.
 	// when pressure is 0, color will be between, gray.
 
+	final double DETERMINATION = 2;
+	// determines likelihood of a given cell giving pressure to a cell not in its direction of travel
 	final Orientation[] ORS = { Orientation.N, Orientation.S, Orientation.E,
 			Orientation.W, Orientation.NE, Orientation.NW, Orientation.SE,
 			Orientation.SW };
@@ -41,8 +44,8 @@ public class PressureTest2 {
 
 	private final int FRAME_RATE_SYNC = 60;
 
-	public static final int SCREEN_WIDTH = 640;
-	public static final int SCREEN_HEIGHT = 480;
+	public static final int SCREEN_WIDTH = 320;
+	public static final int SCREEN_HEIGHT = 240;
 
 	private boolean paused = false;
 
@@ -93,8 +96,8 @@ public class PressureTest2 {
 		lastFrame = getTime();
 	}
 
-	private double[][] setUpGrid(int w, int h) {
-		double[][] g = new double[w][h];
+	private myVector[][] setUpGrid(int w, int h) {
+		myVector[][] g = new myVector[w][h];
 		for (int i = 0; i < w; i++) {
 			for (int j = 0; j < h; j++) {
 				// g[i][j] = (int) (((w - i) * 1.0 / w) *
@@ -104,10 +107,13 @@ public class PressureTest2 {
 				// g[i][j] = 0;
 
 				if (j < 20) {
-					g[i][j] = PURE_COLOR_PRESSURE_THRESHOLD;
+					g[i][j] = new myVector(PURE_COLOR_PRESSURE_THRESHOLD);
 				}
-				if (j > 460) {
-					g[i][j] = -PURE_COLOR_PRESSURE_THRESHOLD;
+				else if (j > 460) {
+					g[i][j] = new myVector(-PURE_COLOR_PRESSURE_THRESHOLD);
+				}
+				else {
+					g[i][j] = new myVector(0);
 				}
 				// strips of low at top and high at bottom
 			}
@@ -162,7 +168,7 @@ public class PressureTest2 {
 			return;
 		}
 		// make a copy of the grid to manipulate values on
-		double[][] gridcpy = new double[SCREEN_WIDTH][SCREEN_HEIGHT];
+		myVector[][] gridcpy = new myVector[SCREEN_WIDTH][SCREEN_HEIGHT];
 		for (int i = 0; i < SCREEN_WIDTH; i++) {
 			for (int j = 0; j < SCREEN_HEIGHT; j++) {
 				gridcpy[i][j] = grid[i][j];
@@ -186,45 +192,152 @@ public class PressureTest2 {
 			return false;
 		if (wall[x2][y2] || wall[x1][y1]) // is it a wall?
 			return false;
-		return grid[x1][y1] > grid[x2][y2];
+		return grid[x1][y1].getVal() > grid[x2][y2].getVal();
 	}
 
-	private boolean setValue(int x, int y, double val, double[][] g) {
+	private boolean setValue(int x, int y, double val, myVector[][] g) {
 		if (wall[x][y]) {
 			return false;
 		}
-		g[x][y] = val;
+		g[x][y].setVal(val);
 		return true;
 	}
 
-	private boolean balanceWithNeighbors(int x, int y, double[][] gc) {
+	private boolean balanceWithNeighbors(int x, int y, myVector[][] gc) {
 		double totalNeighborBalanceCoefficient = 0;
 		ArrayList<Orientation> goodors = new ArrayList<PressureTest2.Orientation>();
 		for (int i = 0; i < NUM_ORS; i++) {
 			if (isAcceptableBalanceTarget(x, y, x + getXShift(ORS[i]), y
 					+ getYShift(ORS[i]))) {
-				goodors.add(ORS[i]);
+				//process with random weighting whether or not to balance with this one based on past orientation, 'speed'
+				if(evaluateWeightOfOrient(ORS[i],gc[x][y].getDir(),x,y,gc))
+					goodors.add(ORS[i]);
 				totalNeighborBalanceCoefficient = getBalanceValue(ORS[i]);
 			}
 		}
 
 		for (int i = 0; i < goodors.size(); i++) {
-			balanceWithOrientation(x, y, goodors.get(i), gc);
+			balanceWithOrientation(x, y, goodors.get(i), gc); 
 		}
 
 		return totalNeighborBalanceCoefficient > 0;
 	}
+	
+	private boolean evaluateWeightOfOrient(Orientation to, Orientation from, int x, int y, myVector[][] gc)
+	{
+		switch (to) {
+		case C:
+			return true;
+		case E:
+			switch (from){
+			case E:
+				return true;
+			case NE:
+				return Math.random()*gc[x][y].getChng()>DETERMINATION*3;
+			case SE:
+				return Math.random()*gc[x][y].getChng()>DETERMINATION*3;
+			default:
+				return Math.random()*gc[x][y].getChng()>DETERMINATION;
+			
+			}
+		case N:
+			switch (from){
+			case N:
+				//System.out.println(gc[x][y].getChng());
+				return true;
+			case NE:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case NW:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		case NE:
+			switch (from){
+			case E:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case N:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case NE:
+				return true;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		case NW:
+			switch (from){
+			case N:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case NE:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case NW:
+				return true;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		case S:
+			switch (from){
+			case S:
+				return true;
+			case SE:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case SW:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		case SE:
+			switch (from){
+			case E:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case S:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case SE:
+				return true;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		case SW:
+			switch (from){
+			case S:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case SW:
+				return true;
+			case W:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		case W:
+			switch (from){
+			case NW:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case SW:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION*3;
+			case W:
+				return true;
+			default:
+				return Math.random()*gc[x][y].getChng()<DETERMINATION;
+			}
+		default:
+			System.out.println("<" + to + "from" + from
+					+ ">: Failed to evaluate direction wieghting: unknown orientation.");
+			return false;
 
+		}
+		//return true;
+	}
+	
 	private boolean balanceWithOrientation(int x, int y, Orientation or,
-			double[][] gc) {
+			myVector[][] gc) {
 		// Still does not work as intended.
-		double valueDiff = grid[x][y] - grid[x+getXShift(or)][y+getYShift(or)];
+		double valueDiff = grid[x][y].getVal() - grid[x+getXShift(or)][y+getYShift(or)].getVal();
 		double factor = getBalanceValue(or) * valueDiff / DIVISIVE_FACTOR;
-
-		setValue(x, y, gc[x][y] - factor, gc);
+		setValue(x, y, gc[x][y].getVal() - factor, gc);
 		setValue(x + getXShift(or), y + getYShift(or), gc[x + getXShift(or)][y
-				+ getYShift(or)]
+				+ getYShift(or)].getVal()
 				+ factor, gc);
+		gc[x][y].setDir(or);
+		gc[x][y].setChng(valueDiff/DIVISIVE_FACTOR);
 		return true;
 
 	}
@@ -250,7 +363,7 @@ public class PressureTest2 {
 		}
 		float[] c = new float[3];
 		float univColor = 0.5f;
-		univColor += (grid[x][y] * 1.0f / PURE_COLOR_PRESSURE_THRESHOLD) / 2;
+		univColor += (grid[x][y].getVal() * 1.0f / PURE_COLOR_PRESSURE_THRESHOLD) / 2;
 
 		// if you want it more colorful, then you can do dat!
 		c[0] = univColor;
@@ -260,7 +373,7 @@ public class PressureTest2 {
 	}
 
 	private void addPressure(int x, int y, int amount) {
-		setValue(x, y, grid[x][y] + amount, grid);
+		setValue(x, y, grid[x][y].getVal() + amount, grid);
 	}
 
 	// As of now, mouse still just adds or subtracts pressure, does not 'push'
@@ -311,7 +424,7 @@ public class PressureTest2 {
 	}
 
 	public enum Orientation {
-		N, S, E, W, NE, NW, SE, SW
+		N, S, E, W, NE, NW, SE, SW, C
 	}
 
 	public int getXShift(Orientation or) {
@@ -391,6 +504,33 @@ public class PressureTest2 {
 					+ ">: Failed to get balance value: unknown orientation.");
 			return 0;
 		}
+	}
+	private class myVector{ //'vector' with magnitude and a carried value
+		private double value;
+		private Orientation lastDir=Orientation.C;
+		private double lastChng=0;
+		private myVector(double sval){
+			value=sval;
+		}
+		private double getVal(){
+			return value;
+		}
+		private Orientation getDir(){
+			return lastDir;
+		}
+		private double getChng(){
+			return lastChng;
+		}
+		private void setVal(double val){
+			value=val;
+		}
+		private void setDir(Orientation dir){
+			lastDir=dir;
+		}
+		private void setChng(double chng){
+			lastChng=chng;
+		}
+		
 	}
 
 }
