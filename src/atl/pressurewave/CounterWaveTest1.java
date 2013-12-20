@@ -34,7 +34,7 @@ public class CounterWaveTest1 {
 	public static final int SCREEN_WIDTH = 640;
 	public static final int SCREEN_HEIGHT = 480;
 
-	private final String TITLE = "Wavefighting!";
+	private final String TITLE = "'Murica!";
 
 	// private long lastFrame; // used if using delta to adjust speeed
 
@@ -183,11 +183,11 @@ public class CounterWaveTest1 {
 			int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
 				Pillar p = pills.get(0);
-				p.setLeftStrength(p.getLeftStrength()+1.0);
+				p.setLeftStrength(p.getLeftStrength() + 1.0);
 			}
 			if (Mouse.isButtonDown(1)) {
-				Pillar p = pills.get(NUM_PILLS-1);
-				p.setRightStrength(p.getRightStrength()-1.0);
+				Pillar p = pills.get(NUM_PILLS - 1);
+				p.setRightStrength(p.getRightStrength() - 1.0);
 			}
 		}
 		if (Keyboard.isKeyDown(MOUSE_ENABLE_KEY)) {
@@ -240,6 +240,21 @@ public class CounterWaveTest1 {
 			this.rightStrength = rightStrength;
 		}
 
+		public double getScreenLSPos() {
+			return (SCREEN_HEIGHT / 2)
+					* (1 + (getLeftStrength() / POWER_LIMIT));
+		}
+
+		public double getScreenRSPos() {
+			return (SCREEN_HEIGHT / 2)
+					* (1 + (getRightStrength() / POWER_LIMIT));
+		}
+
+		public double getScreenLRSPos() {
+			return (SCREEN_HEIGHT / 2)
+					* (1 + ((getRightStrength() + getLeftStrength()) / POWER_LIMIT));
+		}
+
 		public void renderPillar(int leftBound, int rightBound, double r,
 				double g, double b) {
 			// System.out.println("HADUHGF");
@@ -257,34 +272,24 @@ public class CounterWaveTest1 {
 				glColor3f((RIGHTCOLOR[0] + LEFTCOLOR[0]) / 2,
 						(RIGHTCOLOR[1] + LEFTCOLOR[1]) / 2,
 						(RIGHTCOLOR[2] + LEFTCOLOR[2]) / 2);
-				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
-						* (1 + (getRightStrength() / POWER_LIMIT)));
-				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
-						* (1 + (getRightStrength() / POWER_LIMIT)));
+				glVertex2d(leftBound, getScreenLSPos());
+				glVertex2d(rightBound, getScreenLSPos());
 			} else {
 				glColor3f(LEFTCOLOR[0], LEFTCOLOR[1], LEFTCOLOR[2]);
-				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
-						* (1 + (getLeftStrength() / POWER_LIMIT)));
-				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
-						* (1 + (getLeftStrength() / POWER_LIMIT)));
+				glVertex2d(leftBound, getScreenLSPos());
+				glVertex2d(rightBound, getScreenLSPos());
 
 				glColor3f(RIGHTCOLOR[0], RIGHTCOLOR[1], RIGHTCOLOR[2]);
-				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
-						* (1 + (getRightStrength() / POWER_LIMIT)));
-				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
-						* (1 + (getRightStrength() / POWER_LIMIT)));
-				
-				
+				glVertex2d(leftBound, getScreenRSPos());
+				glVertex2d(rightBound, getScreenRSPos());
+
 			}
-			
-			if(getLeftStrength() != 0 && getRightStrength() != 0){
+
+			if (getLeftStrength() != 0 && getRightStrength() != 0) {
 				glColor3f(1, 1, 1);
-				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
-						* (1 + ((getRightStrength()+getLeftStrength()) / POWER_LIMIT)));
-				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
-						* (1 + ((getRightStrength()+getLeftStrength()) / POWER_LIMIT)));
+				glVertex2d(leftBound, getScreenLRSPos());
+				glVertex2d(rightBound, getScreenLRSPos());
 			}
-			
 
 			glEnd();
 		}
