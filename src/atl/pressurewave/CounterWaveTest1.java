@@ -16,13 +16,16 @@ import org.lwjgl.util.Color;
 
 public class CounterWaveTest1 {
 
-
 	ArrayList<Pillar> pills;
-	final int NUM_PILLS = 20;
-	final int TICK_DELAY = 20;
+	final int NUM_PILLS = 100;
+	final int TICK_DELAY = 2;
+
+	final float LEFTCOLOR[] = { 1f, 0f, 0f };
+	final float RIGHTCOLOR[] = { 0f, 0f, 1f };
+
 	final double POWER_LIMIT = 20;
 	int tick = 0;
-	
+
 	private boolean mouseEnabled = true;
 	final int MOUSE_ENABLE_KEY = Keyboard.KEY_E;
 	final int MOUSE_DISABLE_KEY = Keyboard.KEY_D;
@@ -31,7 +34,6 @@ public class CounterWaveTest1 {
 	public static final int SCREEN_WIDTH = 640;
 	public static final int SCREEN_HEIGHT = 480;
 
-	
 	private final String TITLE = "Wavefighting!";
 
 	// private long lastFrame; // used if using delta to adjust speeed
@@ -79,17 +81,17 @@ public class CounterWaveTest1 {
 	/*
 	 * private void setUpTimer() { lastFrame = getTime(); }
 	 */
-	
-	private void setUpPillars(){
+
+	private void setUpPillars() {
 		pills = new ArrayList<Pillar>();
-		for(int i = 0; i < NUM_PILLS; i++){
-			pills.add(new Pillar());	
+		for (int i = 0; i < NUM_PILLS; i++) {
+			pills.add(new Pillar());
 		}
 	}
-	
-	private void displayPillarStatus(){
+
+	private void displayPillarStatus() {
 		System.out.println("---Pillar Status---");
-		for(int i = 0; i < NUM_PILLS; i++){
+		for (int i = 0; i < NUM_PILLS; i++) {
 			System.out.println(pills.get(i));
 		}
 		System.out.println("---End Status---");
@@ -102,9 +104,9 @@ public class CounterWaveTest1 {
 		// setUpTimer();
 
 		// int delta;
-		
+
 		setUpPillars();
-		
+
 		while (!Display.isCloseRequested()) {
 			// loop
 			// delta = getDelta();
@@ -123,8 +125,8 @@ public class CounterWaveTest1 {
 
 	private void tick() {
 		tick++;
-		
-		if(tick > TICK_DELAY){
+
+		if (tick > TICK_DELAY) {
 			tick = 0;
 			displayPillarStatus();
 			propagateLeft();
@@ -133,45 +135,46 @@ public class CounterWaveTest1 {
 		// tick world.
 		return;
 	}
-	
-	private void propagateLeft(){
+
+	private void propagateLeft() {
 		double stor[] = new double[NUM_PILLS];
-		
-		for(int i =0; i < NUM_PILLS-1;i++){
+
+		for (int i = 0; i < NUM_PILLS - 1; i++) {
 			stor[i] = pills.get(i).getLeftStrength();
 		}
-		
+
 		pills.get(0).setLeftStrength(0.0);
-		for(int i = 1; i < NUM_PILLS; i++){
-			pills.get(i).setLeftStrength(stor[i-1]);
+		for (int i = 1; i < NUM_PILLS; i++) {
+			pills.get(i).setLeftStrength(stor[i - 1]);
 		}
 	}
-	
-	private void propagateRight(){
+
+	private void propagateRight() {
 		double stor[] = new double[NUM_PILLS];
-		
-		for(int i = NUM_PILLS-1; i > 0; i--){
+
+		for (int i = NUM_PILLS - 1; i > 0; i--) {
 			stor[i] = pills.get(i).getRightStrength();
 		}
-		
-		pills.get(NUM_PILLS-1).setRightStrength(0.0);
-		
-		for(int i = NUM_PILLS-2; i >= 0; i--){
-			pills.get(i).setRightStrength(stor[i+1]);
+
+		pills.get(NUM_PILLS - 1).setRightStrength(0.0);
+
+		for (int i = NUM_PILLS - 2; i >= 0; i--) {
+			pills.get(i).setRightStrength(stor[i + 1]);
 		}
 	}
 
 	private void render() {
 		// draw.
 		glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
-		//glBegin(GL_POINTS);
+		// glBegin(GL_POINTS);
 		for (int i = 0; i < pills.size(); i++) {
-			pills.get(i).renderPillar(
-					(int)(i * (SCREEN_WIDTH * 1.0) / NUM_PILLS),
-					(int)((i+1) * (SCREEN_WIDTH * 1.0) / NUM_PILLS), pills.get(i).getLeftStrength() / POWER_LIMIT, .8, pills.get(i).getRightStrength() / POWER_LIMIT);
+			pills.get(i)
+					.renderPillar((int) (i * (SCREEN_WIDTH * 1.0) / NUM_PILLS),
+							(int) ((i + 1) * (SCREEN_WIDTH * 1.0) / NUM_PILLS),
+							0, 0, 0);
 		}
 
-		//glEnd();
+		// glEnd();
 	}
 
 	private void input() {
@@ -179,10 +182,12 @@ public class CounterWaveTest1 {
 			int mouseX = Mouse.getX();// - WIDTH / 2;
 			int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
-				pills.get(0).setLeftStrength(10);
+				Pillar p = pills.get(0);
+				p.setLeftStrength(p.getLeftStrength()+1.0);
 			}
 			if (Mouse.isButtonDown(1)) {
-				pills.get(NUM_PILLS-1).setRightStrength(10);
+				Pillar p = pills.get(NUM_PILLS-1);
+				p.setRightStrength(p.getRightStrength()-1.0);
 			}
 		}
 		if (Keyboard.isKeyDown(MOUSE_ENABLE_KEY)) {
@@ -209,53 +214,88 @@ public class CounterWaveTest1 {
 		}
 
 	}
-	
-	private class Pillar{
+
+	private class Pillar {
 		private double leftStrength;
 		private double rightStrength;
-		
-		public Pillar(){
+
+		public Pillar() {
 			leftStrength = 0;
 			rightStrength = 0;
 		}
-		
+
 		public double getLeftStrength() {
 			return leftStrength;
 		}
+
 		public void setLeftStrength(double leftStrength) {
 			this.leftStrength = leftStrength;
 		}
+
 		public double getRightStrength() {
 			return rightStrength;
 		}
+
 		public void setRightStrength(double rightStrength) {
 			this.rightStrength = rightStrength;
 		}
-		
-		public void renderPillar(int leftBound, int rightBound, double r, double g, double b){
-			//System.out.println("HADUHGF");
-			glColor3f(0, 0, 0);
+
+		public void renderPillar(int leftBound, int rightBound, double r,
+				double g, double b) {
+			// System.out.println("HADUHGF");
+			glColor3f((float) r, (float) g, (float) b);
 			glBegin(GL_QUADS);
 			glVertex2d(leftBound, 0);
 			glVertex2d(rightBound, 0);
 			glVertex2d(rightBound, SCREEN_HEIGHT);
 			glVertex2d(leftBound, SCREEN_HEIGHT);
 			glEnd();
-			glColor3f((float)r, (float)g, (float)b);
+			;
 			glBegin(GL_LINES);
-			glVertex2d(leftBound, (SCREEN_HEIGHT / 2)  * (1+ (getLeftStrength() / POWER_LIMIT)));
-			glVertex2d(rightBound, (SCREEN_HEIGHT / 2)  * (1+ (getLeftStrength() / POWER_LIMIT)));
-			glVertex2d(leftBound, (SCREEN_HEIGHT / 2)  * (1+ (getRightStrength() / POWER_LIMIT)));
-			glVertex2d(rightBound, (SCREEN_HEIGHT / 2)  * (1+ (getRightStrength() / POWER_LIMIT)));
+
+			if (getLeftStrength() == getRightStrength()) {
+				glColor3f((RIGHTCOLOR[0] + LEFTCOLOR[0]) / 2,
+						(RIGHTCOLOR[1] + LEFTCOLOR[1]) / 2,
+						(RIGHTCOLOR[2] + LEFTCOLOR[2]) / 2);
+				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
+						* (1 + (getRightStrength() / POWER_LIMIT)));
+				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
+						* (1 + (getRightStrength() / POWER_LIMIT)));
+			} else {
+				glColor3f(LEFTCOLOR[0], LEFTCOLOR[1], LEFTCOLOR[2]);
+				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
+						* (1 + (getLeftStrength() / POWER_LIMIT)));
+				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
+						* (1 + (getLeftStrength() / POWER_LIMIT)));
+
+				glColor3f(RIGHTCOLOR[0], RIGHTCOLOR[1], RIGHTCOLOR[2]);
+				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
+						* (1 + (getRightStrength() / POWER_LIMIT)));
+				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
+						* (1 + (getRightStrength() / POWER_LIMIT)));
+				
+				
+			}
+			
+			if(getLeftStrength() != 0 && getRightStrength() != 0){
+				glColor3f(1, 1, 1);
+				glVertex2d(leftBound, (SCREEN_HEIGHT / 2)
+						* (1 + ((getRightStrength()+getLeftStrength()) / POWER_LIMIT)));
+				glVertex2d(rightBound, (SCREEN_HEIGHT / 2)
+						* (1 + ((getRightStrength()+getLeftStrength()) / POWER_LIMIT)));
+			}
+			
+
 			glEnd();
 		}
-		
-		public String toString(){
-			return "<Pill: LS("+getLeftStrength()+") RS("+getRightStrength()+")>";
+
+		public String toString() {
+			return "<Pill: LS(" + getLeftStrength() + ") RS("
+					+ getRightStrength() + ")>";
 		}
-		
+
 	}
-	
+
 	public static void main(String[] args) {
 		new CounterWaveTest1();
 
