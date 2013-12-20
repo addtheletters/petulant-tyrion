@@ -20,7 +20,7 @@ public class CounterWaveTest1 {
 	ArrayList<Pillar> pills;
 	final int NUM_PILLS = 20;
 	final int TICK_DELAY = 20;
-	final double POWER_LIMIT = 10;
+	final double POWER_LIMIT = 20;
 	int tick = 0;
 	
 	private boolean mouseEnabled = true;
@@ -234,12 +234,19 @@ public class CounterWaveTest1 {
 		
 		public void renderPillar(int leftBound, int rightBound, double r, double g, double b){
 			//System.out.println("HADUHGF");
-			glColor3f((float)r, (float)g, (float)b);
+			glColor3f(0, 0, 0);
 			glBegin(GL_QUADS);
 			glVertex2d(leftBound, 0);
 			glVertex2d(rightBound, 0);
 			glVertex2d(rightBound, SCREEN_HEIGHT);
 			glVertex2d(leftBound, SCREEN_HEIGHT);
+			glEnd();
+			glColor3f((float)r, (float)g, (float)b);
+			glBegin(GL_LINES);
+			glVertex2d(leftBound, (SCREEN_HEIGHT / 2)  * (1+ (getLeftStrength() / POWER_LIMIT)));
+			glVertex2d(rightBound, (SCREEN_HEIGHT / 2)  * (1+ (getLeftStrength() / POWER_LIMIT)));
+			glVertex2d(leftBound, (SCREEN_HEIGHT / 2)  * (1+ (getRightStrength() / POWER_LIMIT)));
+			glVertex2d(rightBound, (SCREEN_HEIGHT / 2)  * (1+ (getRightStrength() / POWER_LIMIT)));
 			glEnd();
 		}
 		
