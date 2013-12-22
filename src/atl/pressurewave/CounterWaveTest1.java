@@ -22,8 +22,16 @@ public class CounterWaveTest1 {
 
 	final float LEFTCOLOR[] = { 1f, 0f, 0f };
 	final float RIGHTCOLOR[] = { 0f, 0f, 1f };
-
+	final float MIXCOLOR[] = {1f, 1f, 1f};
+	final float NULLCOLOR[] = {.5f, .5f, .5f};
+	
 	final double POWER_LIMIT = 20;
+	
+	double leftPower = 0;
+	double rightPower = 0;
+	
+	double powerStepdown = 0.1;
+	
 	int tick = 0;
 
 	private boolean mouseEnabled = true;
@@ -106,6 +114,11 @@ public class CounterWaveTest1 {
 		// int delta;
 
 		setUpPillars();
+		
+		
+		if(powerStepdown < 0){
+			System.out.println("Warning: powerStepdown is " + powerStepdown);
+		}
 
 		while (!Display.isCloseRequested()) {
 			// loop
@@ -128,12 +141,59 @@ public class CounterWaveTest1 {
 
 		if (tick > TICK_DELAY) {
 			tick = 0;
-			displayPillarStatus();
+			//displayPillarStatus();
 			propagateLeft();
 			propagateRight();
 		}
 		// tick world.
 		return;
+	}
+	
+	
+	private void sendSignal(){
+		sendLeftSignal();
+		sendRightSignal();
+	}
+	
+	private void sendLeftSignal(){
+		Pillar p = pills.get(0);
+		p.setLeftStrength(p.getLeftStrength() + leftPower);
+	}
+	
+	private void sendRightSignal(){
+		Pillar p = pills.get(NUM_PILLS - 1);
+		p.setRightStrength(p.getRightStrength() + rightPower);
+	}
+	
+	private void downStepBothPowers(){
+		downStepLeftPower();
+		downStepRightPower();
+	}
+	
+	private double getPowerDown(double pow){
+		double changed = pow;
+		
+		if(Math.abs(pow) > powerStepdown){
+			if(pow > 0){
+				changed -= powerStepdown;
+			}
+			else{
+				changed += powerStepdown;
+			}
+		}
+		else{
+			changed = 0;
+		}
+		
+		return changed;
+	}
+	
+	private void downStepLeftPower(){
+		leftPower = getPowerDown(leftPower);
+	}
+	
+	private void downStepRightPower(){
+		rightPower = getPowerDown(rightPower);
 	}
 
 	private void propagateLeft() {
@@ -165,6 +225,55 @@ public class CounterWaveTest1 {
 
 	private void render() {
 		// draw.
+
+		//renderIndividual();
+
+		renderConnected();
+		
+		// glEnd();
+	}
+
+	private void renderConnected() {
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		renderConnectedSinglePath(-1); 	//left
+		renderConnectedSinglePath(1); 	//right
+		renderConnectedSinglePath(0);	//sum
+	}
+
+	/**
+	 * 
+	 * @param path designates which path it is, IE left, right, or summation
+	 */
+	private void renderConnectedSinglePath(int path) {
+		glBegin(GL_LINE_STRIP);
+		switch(path){
+		case -1:	//Left path designated
+			glColor3f(LEFTCOLOR[0], LEFTCOLOR[1], LEFTCOLOR[2]);
+			break;
+		case 0:
+			glColor3f(MIXCOLOR[0], MIXCOLOR[1], MIXCOLOR[2]);
+			break;
+		case 1:
+			glColor3f(RIGHTCOLOR[0], RIGHTCOLOR[1], RIGHTCOLOR[2]);
+			break;
+		default:
+			System.out.println("Error: Unknown path type:" + path + ", using NULLCOLOR.");
+			glColor3f(NULLCOLOR[0], NULLCOLOR[1], NULLCOLOR[2]);
+			break;
+		}	
+		for (int i = 0; i < pills.size(); i++) {
+			glVertex2d((int) (i * (SCREEN_WIDTH * 1.0) / NUM_PILLS), pills.get(i).getScreenParameterPos(path));
+		}
+		
+		glEnd();
+	}
+
+	
+	/**
+	 * Deprecated. This was the odd linebar thing from previously.
+	 */
+	private void renderIndividual() {
 		glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
 		// glBegin(GL_POINTS);
 		for (int i = 0; i < pills.size(); i++) {
@@ -174,7 +283,6 @@ public class CounterWaveTest1 {
 							0, 0, 0);
 		}
 
-		// glEnd();
 	}
 
 	private void input() {
@@ -239,6 +347,20 @@ public class CounterWaveTest1 {
 		public void setRightStrength(double rightStrength) {
 			this.rightStrength = rightStrength;
 		}
+		
+		public double getScreenParameterPos(int param){
+			switch(param){
+			case -1:
+				return getScreenLSPos();
+			case 0:
+				return getScreenLRSPos();
+			case 1:
+				return getScreenRSPos();
+			default:
+				System.out.println("Error: Tried to get screen height of unknown param: " + param);
+				return 0;
+			}
+		}
 
 		public double getScreenLSPos() {
 			return (SCREEN_HEIGHT / 2)
@@ -286,7 +408,7 @@ public class CounterWaveTest1 {
 			}
 
 			if (getLeftStrength() != 0 && getRightStrength() != 0) {
-				glColor3f(1, 1, 1);
+				glColor3f(MIXCOLOR[0], MIXCOLOR[1], MIXCOLOR[2]);
 				glVertex2d(leftBound, getScreenLRSPos());
 				glVertex2d(rightBound, getScreenLRSPos());
 			}
