@@ -25,7 +25,7 @@ public class CounterWaveTest1 {
 	final float MIXCOLOR[] = {1f, 1f, 1f};
 	final float NULLCOLOR[] = {.5f, .5f, .5f};
 	
-	final double POWER_LIMIT = 20;
+	final double POWER_LIMIT = 20;	
 	
 	double leftPower = 0;
 	double rightPower = 0;
@@ -42,7 +42,7 @@ public class CounterWaveTest1 {
 	public static final int SCREEN_WIDTH = 640;
 	public static final int SCREEN_HEIGHT = 480;
 
-	private final String TITLE = "'Murica!";
+	private final String TITLE = "'Murican Wavefighting!";
 
 	// private long lastFrame; // used if using delta to adjust speeed
 
@@ -139,6 +139,9 @@ public class CounterWaveTest1 {
 	private void tick() {
 		tick++;
 
+		sendSignals();
+		downStepBothPowers();
+		
 		if (tick > TICK_DELAY) {
 			tick = 0;
 			//displayPillarStatus();
@@ -150,7 +153,7 @@ public class CounterWaveTest1 {
 	}
 	
 	
-	private void sendSignal(){
+	private void sendSignals(){
 		sendLeftSignal();
 		sendRightSignal();
 	}
@@ -263,7 +266,7 @@ public class CounterWaveTest1 {
 			break;
 		}	
 		for (int i = 0; i < pills.size(); i++) {
-			glVertex2d((int) (i * (SCREEN_WIDTH * 1.0) / NUM_PILLS), pills.get(i).getScreenParameterPos(path));
+			glVertex2d((int) ( (i+.5) * (SCREEN_WIDTH * 1.0) / NUM_PILLS), pills.get(i).getScreenParameterPos(path));
 		}
 		
 		glEnd();
@@ -290,12 +293,10 @@ public class CounterWaveTest1 {
 			int mouseX = Mouse.getX();// - WIDTH / 2;
 			int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
-				Pillar p = pills.get(0);
-				p.setLeftStrength(p.getLeftStrength() + 1.0);
+				leftPower += 0.5;
 			}
 			if (Mouse.isButtonDown(1)) {
-				Pillar p = pills.get(NUM_PILLS - 1);
-				p.setRightStrength(p.getRightStrength() - 1.0);
+				rightPower -= 0.5;
 			}
 		}
 		if (Keyboard.isKeyDown(MOUSE_ENABLE_KEY)) {
