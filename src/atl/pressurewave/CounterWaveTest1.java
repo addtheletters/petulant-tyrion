@@ -30,7 +30,7 @@ public class CounterWaveTest1 {
 	double leftPower = 0;
 	double rightPower = 0;
 	
-	double powerStepdown = 0.1;
+	double powerStepdown = 0.05;
 	
 	int tick = 0;
 
@@ -293,10 +293,10 @@ public class CounterWaveTest1 {
 			int mouseX = Mouse.getX();// - WIDTH / 2;
 			int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
-				leftPower += 0.5;
+				leftPower += 0.2;
 			}
 			if (Mouse.isButtonDown(1)) {
-				rightPower -= 0.5;
+				rightPower -= 0.2;
 			}
 		}
 		if (Keyboard.isKeyDown(MOUSE_ENABLE_KEY)) {
