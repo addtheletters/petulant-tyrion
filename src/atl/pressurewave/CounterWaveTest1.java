@@ -25,7 +25,9 @@ public class CounterWaveTest1 {
 	final float MIXCOLOR[] = {1f, 1f, 1f};
 	final float NULLCOLOR[] = {.5f, .5f, .5f};
 	
-	final double POWER_LIMIT = 20;	
+	final double POWER_LIMIT = 2;	
+	
+	final double THETA_STEP = 0.1;
 	
 	double leftPower = 0;
 	double rightPower = 0;
@@ -33,6 +35,8 @@ public class CounterWaveTest1 {
 	double powerStepdown = 0.05;
 	
 	int tick = 0;
+	
+	double theta = 0.0;
 
 	private boolean mouseEnabled = true;
 	final int MOUSE_ENABLE_KEY = Keyboard.KEY_E;
@@ -138,6 +142,8 @@ public class CounterWaveTest1 {
 
 	private void tick() {
 		tick++;
+		theta += THETA_STEP;
+		
 
 		sendSignals();
 		downStepBothPowers();
@@ -160,7 +166,7 @@ public class CounterWaveTest1 {
 	
 	private void sendLeftSignal(){
 		Pillar p = pills.get(0);
-		p.setLeftStrength(p.getLeftStrength() + leftPower);
+		p.setLeftStrength(Math.sin(theta));
 	}
 	
 	private void sendRightSignal(){
@@ -293,10 +299,10 @@ public class CounterWaveTest1 {
 			int mouseX = Mouse.getX();// - WIDTH / 2;
 			int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
-				leftPower += 0.2;
+				leftPower += 0.1;
 			}
 			if (Mouse.isButtonDown(1)) {
-				rightPower -= 0.2;
+				rightPower -= 0.1;
 			}
 		}
 		if (Keyboard.isKeyDown(MOUSE_ENABLE_KEY)) {
