@@ -17,20 +17,27 @@ import org.lwjgl.util.Color;
 public class CounterWaveTest1 {
 
 	ArrayList<Pillar> pills;
-	final int NUM_PILLS = 100;
-	final int TICK_DELAY = 2;
+	final int NUM_PILLS = 1000;
+	final int TICK_DELAY = 1;
 
 	final float LEFTCOLOR[] = { 1f, 0f, 0f };
 	final float RIGHTCOLOR[] = { 0f, 0f, 1f };
 	final float MIXCOLOR[] = {1f, 1f, 1f};
 	final float NULLCOLOR[] = {.5f, .5f, .5f};
 	
-	final double POWER_LIMIT = 2;	
+	final double POWER_LIMIT = 10;	
 	
 	final double THETA_STEP = 0.1;
 	
+	double leftAmp = 1;
+	double rightAmp = 2;
+	double leftTimeScale = 0.5;
+	double rightTimeScale = 0.1;
+	double leftPhaseShift = 1;
+	double rightPhaseShift = 0;
+	
 	double leftPower = 0;
-	double rightPower = 0;
+	double rightPower = 2;
 	
 	double powerStepdown = 0.05;
 	
@@ -43,8 +50,8 @@ public class CounterWaveTest1 {
 	final int MOUSE_DISABLE_KEY = Keyboard.KEY_D;
 	private final int FRAME_RATE_SYNC = 60;
 
-	public static final int SCREEN_WIDTH = 640;
-	public static final int SCREEN_HEIGHT = 480;
+	public static final int SCREEN_WIDTH = 1980;
+	public static final int SCREEN_HEIGHT = 1020;
 
 	private final String TITLE = "'Murican Wavefighting!";
 
@@ -101,16 +108,9 @@ public class CounterWaveTest1 {
 		}
 	}
 
-	private void displayPillarStatus() {
-		System.out.println("---Pillar Status---");
-		for (int i = 0; i < NUM_PILLS; i++) {
-			System.out.println(pills.get(i));
-		}
-		System.out.println("---End Status---");
-	}
 
 	public CounterWaveTest1() {
-		setUpDisplay();
+		setUpDisplay();//.5
 		setUpOpenGL();
 
 		// setUpTimer();
@@ -129,7 +129,7 @@ public class CounterWaveTest1 {
 			// delta = getDelta();
 
 			tick();
-			input();
+			input();//.5
 			render();
 
 			Display.update();
@@ -146,7 +146,6 @@ public class CounterWaveTest1 {
 		
 
 		sendSignals();
-		downStepBothPowers();
 		
 		if (tick > TICK_DELAY) {
 			tick = 0;
@@ -163,47 +162,26 @@ public class CounterWaveTest1 {
 		sendLeftSignal();
 		sendRightSignal();
 	}
+	//sin
+	private double leftFunction(double t){
+		return Math.pow(2,Math.tan(Math.sin(Math.tan(t))));
+	}
+	
+	private double rightFunction(double t){
+		return -1.0/Math.cos(Math.pow(t,1));
+	}
+	
 	
 	private void sendLeftSignal(){
 		Pillar p = pills.get(0);
-		p.setLeftStrength(Math.sin(theta));
+		p.setLeftStrength( leftAmp * leftFunction((theta * leftTimeScale) + leftPhaseShift)  );
 	}
 	
 	private void sendRightSignal(){
 		Pillar p = pills.get(NUM_PILLS - 1);
-		p.setRightStrength(p.getRightStrength() + rightPower);
+		p.setRightStrength( rightAmp * rightFunction((theta * rightTimeScale) + rightPhaseShift) );
 	}
 	
-	private void downStepBothPowers(){
-		downStepLeftPower();
-		downStepRightPower();
-	}
-	
-	private double getPowerDown(double pow){
-		double changed = pow;
-		
-		if(Math.abs(pow) > powerStepdown){
-			if(pow > 0){
-				changed -= powerStepdown;
-			}
-			else{
-				changed += powerStepdown;
-			}
-		}
-		else{
-			changed = 0;
-		}
-		
-		return changed;
-	}
-	
-	private void downStepLeftPower(){
-		leftPower = getPowerDown(leftPower);
-	}
-	
-	private void downStepRightPower(){
-		rightPower = getPowerDown(rightPower);
-	}
 
 	private void propagateLeft() {
 		double stor[] = new double[NUM_PILLS];
@@ -279,25 +257,11 @@ public class CounterWaveTest1 {
 	}
 
 	
-	/**
-	 * Deprecated. This was the odd linebar thing from previously.
-	 */
-	private void renderIndividual() {
-		glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
-		// glBegin(GL_POINTS);
-		for (int i = 0; i < pills.size(); i++) {
-			pills.get(i)
-					.renderPillar((int) (i * (SCREEN_WIDTH * 1.0) / NUM_PILLS),
-							(int) ((i + 1) * (SCREEN_WIDTH * 1.0) / NUM_PILLS),
-							0, 0, 0);
-		}
-
-	}
 
 	private void input() {
 		if (mouseEnabled) {
-			int mouseX = Mouse.getX();// - WIDTH / 2;
-			int mouseY = Mouse.getY();// - HEIGHT / 2;
+			//int mouseX = Mouse.getX();// - WIDTH / 2;
+			//int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
 				leftPower += 0.1;
 			}
@@ -386,7 +350,7 @@ public class CounterWaveTest1 {
 
 		public void renderPillar(int leftBound, int rightBound, double r,
 				double g, double b) {
-			// System.out.println("HADUHGF");
+			// System.out.println("HADUHGF");b
 			glColor3f((float) r, (float) g, (float) b);
 			glBegin(GL_QUADS);
 			glVertex2d(leftBound, 0);
