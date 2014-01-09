@@ -1,9 +1,6 @@
 package atl.pressurewave;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_POINTS;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
 
 import java.util.ArrayList;
 
@@ -12,46 +9,65 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
-import org.lwjgl.util.Color;
 
 public class CounterWaveTest1 {
-
+	
+	/**
+	 * Display colors
+	 */
+	final float LEFTCOLOR[] 	= { 1f, 0f, 0f };
+	final float RIGHTCOLOR[] 	= { 0f, 0f, 1f };
+	final float MIXCOLOR[] 		= {1f, 1f, 1f};
+	final float NULLCOLOR[] 	= {.5f, .5f, .5f};
+	
+	/**
+	 * Keybinds, listed in highest priority to lowest priority.
+	 * If no modifiers are pressed, it will default to amplify plus.
+	 * Used mostly in clickHelper().
+	 */
+	final int MOUSE_ENABLE_KEY 				= 	Keyboard.KEY_E;
+	final int MOUSE_DISABLE_KEY 			= 	Keyboard.KEY_D;
+	final int MODIFIER_AMPLIFY_PLUS_KEY 	= 	Keyboard.KEY_SPACE;
+	final int MODIFIER_AMPLIFY_MINUS_KEY 	=	Keyboard.KEY_LSHIFT;
+	final int MODIFIER_TIMESCALE_PLUS_KEY 	= 	Keyboard.KEY_UP;
+	final int MODIFIER_TIMESCALE_MINUS_KEY 	= 	Keyboard.KEY_DOWN;
+	final int MODIFIER_PHASESHIFT_PLUS_KEY 	=	Keyboard.KEY_RIGHT;
+	final int MODIFIER_PHASESHIFT_MINUS_KEY = 	Keyboard.KEY_LEFT;
+	final boolean MANUFACTURING_KEYBOARD_KEY = Keyboard.isCreated();
+	
+	
 	ArrayList<Pillar> pills;
-	final int NUM_PILLS = 1000;
-	final int TICK_DELAY = 1;
-
-	final float LEFTCOLOR[] = { 1f, 0f, 0f };
-	final float RIGHTCOLOR[] = { 0f, 0f, 1f };
-	final float MIXCOLOR[] = {1f, 1f, 1f};
-	final float NULLCOLOR[] = {.5f, .5f, .5f};
+	final int NUM_PILLS 		= 500;		//number of nodes, lateral resolution
+	final int TICK_DELAY 		= 0;		//True Tick Delay between lateral propagation ticks
+	final double POWER_LIMIT 	= 10;		//Determines scaling of screen view
+	final double THETA_STEP 	= 0.1;		//Increment to theta each update
+	final double MOUSE_POWER 	= 0.1;		//Scales impact of mouse
 	
-	final double POWER_LIMIT = 10;	
+	/**
+	 * Modifiers for functions. Functions themselves are defined as leftFunction and rightFunction
+	 * with a parameter of theta. Theta is pretty much time as it is constantly incremented
+	 */
+	double leftAmp 			= 1;
+	double rightAmp 		= 2;
+	double leftTimeScale 	= 0.5;
+	double rightTimeScale 	= 0.1;
+	double leftPhaseShift 	= 1;
+	double rightPhaseShift 	= 0;
 	
-	final double THETA_STEP = 0.1;
-	
-	double leftAmp = 1;
-	double rightAmp = 2;
-	double leftTimeScale = 0.5;
-	double rightTimeScale = 0.1;
-	double leftPhaseShift = 1;
-	double rightPhaseShift = 0;
-	
-	double leftPower = 0;
-	double rightPower = 2;
-	
-	double powerStepdown = 0.05;
-	
-	int tick = 0;
-	
-	double theta = 0.0;
+	/**	
+	 * tick is used along with TICK_DELAY for propagation of values laterally.
+	 * Theta is used to calculate function values and updates independently of
+	 * lateral propagation (calculated every frame update)
+	 */
+	int tick 		= 0;
+	double theta 	= 0.0;
 
 	private boolean mouseEnabled = true;
-	final int MOUSE_ENABLE_KEY = Keyboard.KEY_E;
-	final int MOUSE_DISABLE_KEY = Keyboard.KEY_D;
-	private final int FRAME_RATE_SYNC = 60;
+	
+	private final int FRAME_RATE_SYNC = 60;	//openGL will attempt to sync framerate to this
 
-	public static final int SCREEN_WIDTH = 1980;
-	public static final int SCREEN_HEIGHT = 1020;
+	public static final int SCREEN_WIDTH = 1280;
+	public static final int SCREEN_HEIGHT = 790;
 
 	private final String TITLE = "'Murican Wavefighting!";
 
@@ -65,7 +81,7 @@ public class CounterWaveTest1 {
 	/**
 	 * Delta is a value used to track the framerate and adjust speed of
 	 * interactions to ensure that things happen consistently across machines
-	 * with different speeds.
+	 * with different speeds. Not using it here.
 	 * 
 	 * @return integer
 	 */
@@ -84,7 +100,6 @@ public class CounterWaveTest1 {
 			e.printStackTrace();
 		}
 	}
-
 	private void setUpOpenGL() {
 		// initialization for openGl
 
@@ -108,7 +123,6 @@ public class CounterWaveTest1 {
 		}
 	}
 
-
 	public CounterWaveTest1() {
 		setUpDisplay();//.5
 		setUpOpenGL();
@@ -118,18 +132,13 @@ public class CounterWaveTest1 {
 		// int delta;
 
 		setUpPillars();
-		
-		
-		if(powerStepdown < 0){
-			System.out.println("Warning: powerStepdown is " + powerStepdown);
-		}
 
 		while (!Display.isCloseRequested()) {
 			// loop
 			// delta = getDelta();
 
 			tick();
-			input();//.5
+			input();
 			render();
 
 			Display.update();
@@ -143,7 +152,7 @@ public class CounterWaveTest1 {
 	private void tick() {
 		tick++;
 		theta += THETA_STEP;
-		
+		//System.out.println("HIIIIIIII");
 
 		sendSignals();
 		
@@ -162,7 +171,8 @@ public class CounterWaveTest1 {
 		sendLeftSignal();
 		sendRightSignal();
 	}
-	//sin
+
+	
 	private double leftFunction(double t){
 		return Math.pow(2,Math.tan(Math.sin(Math.tan(t))));
 	}
@@ -217,7 +227,6 @@ public class CounterWaveTest1 {
 
 		renderConnected();
 		
-		// glEnd();
 	}
 
 	private void renderConnected() {
@@ -228,6 +237,9 @@ public class CounterWaveTest1 {
 		renderConnectedSinglePath(0);	//sum
 	}
 
+	
+	
+	
 	/**
 	 * 
 	 * @param path designates which path it is, IE left, right, or summation
@@ -256,17 +268,52 @@ public class CounterWaveTest1 {
 		glEnd();
 	}
 
-	
+	private void clickHelper(boolean left){
+		if(Keyboard.isKeyDown(MODIFIER_AMPLIFY_PLUS_KEY)){
+			if(left) leftAmp += MOUSE_POWER;
+			else rightAmp += MOUSE_POWER;
+			return;
+		}
+		if(Keyboard.isKeyDown(MODIFIER_AMPLIFY_MINUS_KEY)){
+			if(left) leftAmp -= MOUSE_POWER;
+			else rightAmp -= MOUSE_POWER;
+			return;
+		}
+		if(Keyboard.isKeyDown(MODIFIER_TIMESCALE_PLUS_KEY)){
+			if(left) leftTimeScale += MOUSE_POWER;
+			else rightTimeScale += MOUSE_POWER;
+			return;
+		}
+		if(Keyboard.isKeyDown(MODIFIER_TIMESCALE_MINUS_KEY)){
+			if(left) leftTimeScale -= MOUSE_POWER;
+			else rightTimeScale -= MOUSE_POWER;
+			return;
+		}
+		if(Keyboard.isKeyDown(MODIFIER_PHASESHIFT_PLUS_KEY)){
+			if(left) leftPhaseShift += MOUSE_POWER;
+			else rightPhaseShift += MOUSE_POWER;
+			return;
+		}
+		if(Keyboard.isKeyDown(MODIFIER_PHASESHIFT_MINUS_KEY)){
+			if(left) leftPhaseShift -= MOUSE_POWER;
+			else rightPhaseShift -= MOUSE_POWER;
+			return;
+		}
+		if(left) leftAmp += MOUSE_POWER;
+		else rightAmp += MOUSE_POWER;
+		return;
+	}
 
+	
 	private void input() {
 		if (mouseEnabled) {
 			//int mouseX = Mouse.getX();// - WIDTH / 2;
 			//int mouseY = Mouse.getY();// - HEIGHT / 2;
 			if (Mouse.isButtonDown(0)) {
-				leftPower += 0.1;
+				clickHelper(true);
 			}
 			if (Mouse.isButtonDown(1)) {
-				rightPower -= 0.1;
+				clickHelper(false);
 			}
 		}
 		if (Keyboard.isKeyDown(MOUSE_ENABLE_KEY)) {
@@ -278,18 +325,6 @@ public class CounterWaveTest1 {
 		if (Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
 			Display.destroy();
 			System.exit(0);
-		}
-		if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-			//
-		}
-		if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-			//
-		}
-		if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-			//
-		}
-		if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-			//
 		}
 
 	}
@@ -348,6 +383,7 @@ public class CounterWaveTest1 {
 					* (1 + ((getRightStrength() + getLeftStrength()) / POWER_LIMIT));
 		}
 
+		@SuppressWarnings("unused")
 		public void renderPillar(int leftBound, int rightBound, double r,
 				double g, double b) {
 			// System.out.println("HADUHGF");b
