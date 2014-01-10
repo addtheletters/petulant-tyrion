@@ -33,15 +33,17 @@ public class CounterWaveTest1 {
 	final int MODIFIER_TIMESCALE_MINUS_KEY 	= 	Keyboard.KEY_DOWN;
 	final int MODIFIER_PHASESHIFT_PLUS_KEY 	=	Keyboard.KEY_RIGHT;
 	final int MODIFIER_PHASESHIFT_MINUS_KEY = 	Keyboard.KEY_LEFT;
-	final boolean MANUFACTURING_KEYBOARD_KEY = Keyboard.isCreated();
 	
 	
 	ArrayList<Pillar> pills;
-	final int NUM_PILLS 		= 500;		//number of nodes, lateral resolution
-	final int TICK_DELAY 		= 0;		//True Tick Delay between lateral propagation ticks
-	final double POWER_LIMIT 	= 10;		//Determines scaling of screen view
-	final double THETA_STEP 	= 0.1;		//Increment to theta each update
-	final double MOUSE_POWER 	= 0.1;		//Scales impact of mouse
+	final int NUM_PILLS 			= 500;		//number of nodes, lateral resolution
+	final int TICK_DELAY 			= 0;		//True Tick Delay between lateral propagation ticks
+	final double POWER_LIMIT 		= 10;		//Determines scaling of screen view
+	final double THETA_STEP 		= 0.1;		//Increment to theta each update
+	final double MOUSE_POWER 		= 1;		//Scales impact of mouse overall
+	final double MOUSE_AMP_POWER	= 0.05;		//Mouse amplifier multiplier (one plus or minus)
+	final double MOUSE_TS_POWER		= 0.05; 	//Mouse timescale multiplier (one plus or minus)
+	final double MOUSE_PS_POWER		= 1; 		//Mouse phaseshift boost amount
 	
 	/**
 	 * Modifiers for functions. Functions themselves are defined as leftFunction and rightFunction
@@ -269,34 +271,35 @@ public class CounterWaveTest1 {
 	}
 
 	private void clickHelper(boolean left){
+		
 		if(Keyboard.isKeyDown(MODIFIER_AMPLIFY_PLUS_KEY)){
-			if(left) leftAmp += MOUSE_POWER;
-			else rightAmp += MOUSE_POWER;
+			if(left) leftAmp *= MOUSE_POWER * (1+MOUSE_AMP_POWER);
+			else rightAmp *= MOUSE_POWER * (1+MOUSE_AMP_POWER);
 			return;
 		}
 		if(Keyboard.isKeyDown(MODIFIER_AMPLIFY_MINUS_KEY)){
-			if(left) leftAmp -= MOUSE_POWER;
-			else rightAmp -= MOUSE_POWER;
+			if(left) leftAmp *= MOUSE_POWER * (1-MOUSE_AMP_POWER);
+			else rightAmp *= MOUSE_POWER * (1-MOUSE_AMP_POWER);
 			return;
 		}
 		if(Keyboard.isKeyDown(MODIFIER_TIMESCALE_PLUS_KEY)){
-			if(left) leftTimeScale += MOUSE_POWER;
-			else rightTimeScale += MOUSE_POWER;
+			if(left) leftTimeScale *= MOUSE_POWER * (1+MOUSE_TS_POWER);
+			else rightTimeScale *= MOUSE_POWER * (1+MOUSE_TS_POWER);
 			return;
 		}
 		if(Keyboard.isKeyDown(MODIFIER_TIMESCALE_MINUS_KEY)){
-			if(left) leftTimeScale -= MOUSE_POWER;
-			else rightTimeScale -= MOUSE_POWER;
+			if(left) leftTimeScale *= MOUSE_POWER * (1-MOUSE_TS_POWER);
+			else rightTimeScale *= MOUSE_POWER * (1-MOUSE_TS_POWER);
 			return;
 		}
 		if(Keyboard.isKeyDown(MODIFIER_PHASESHIFT_PLUS_KEY)){
-			if(left) leftPhaseShift += MOUSE_POWER;
-			else rightPhaseShift += MOUSE_POWER;
+			if(left) leftPhaseShift += MOUSE_POWER * MOUSE_PS_POWER;
+			else rightPhaseShift += MOUSE_POWER * MOUSE_PS_POWER;
 			return;
 		}
 		if(Keyboard.isKeyDown(MODIFIER_PHASESHIFT_MINUS_KEY)){
-			if(left) leftPhaseShift -= MOUSE_POWER;
-			else rightPhaseShift -= MOUSE_POWER;
+			if(left) leftPhaseShift -= MOUSE_POWER * MOUSE_PS_POWER;
+			else rightPhaseShift -= MOUSE_POWER * MOUSE_PS_POWER;
 			return;
 		}
 		if(left) leftAmp += MOUSE_POWER;
