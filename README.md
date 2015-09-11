@@ -1,4 +1,4 @@
 petulant-tyrion
 ===============
 
-Trying (and perhaps failing) to simulate waves with visual aid from LWJGL.
+Simulates parametric waves passing through one another; visualizing them using LWJGL.
